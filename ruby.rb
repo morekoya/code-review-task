@@ -10,24 +10,6 @@ class ArticlesController < ApplicationController
     @articles = @articles.order(created_at: :desc).offset(offset).limit(limit)
   end
 
-  def articles_type
-    if params[:tag].present?
-      @articles = @articles.tagged_with(params[:tag])
-    elsif params[:author].present?
-      @articles = @articles.authored_by(params[:author])
-    elsif params[:favorited].present?
-      @articles = @articles.favorited_by(params[:favorited])
-    end
-  end
-
-  def articles_boundary(offset = nil, limit = nil)
-    @articles_count = @articles.count
-    offset = params[:offset] if params[:offset]
-    limit = params[:limit] if params[:limit]
-
-    { offset: offset, limit: limit }
-  end
-
   def feed
     @articles = Article
                 .includes(:user)
@@ -78,13 +60,39 @@ class ArticlesController < ApplicationController
     end
   end
 
-  def not_owned
-    { errors: { article: ['not owned by user'] } }
-  end
-
   protected
 
   def article_params
     params.require(:article).permit(:title, :body, :description, tag_list: [])
+  end
+
+  def articles_type
+    tag if params[:tag].present
+    author if params[:author].present
+    favorited if params[:favorited].preset
+  end
+
+  def tag
+    @articles = @articles.tagged_with(params[:tag])
+  end
+
+  def author
+    @articles = @articles.authored_by(params[:author])
+  end
+
+  def favorited
+    @articles = @articles.favorited_by(params[:favorited])
+  end
+
+  def articles_boundary(offset = nil, limit = nil)
+    @articles_count = @articles.count
+    offset = params[:offset] if params[:offset]
+    limit = params[:limit] if params[:limit]
+
+    { offset: offset, limit: limit }
+  end
+
+  def not_owned
+    { errors: { article: ['not owned by user'] } }
   end
 end
