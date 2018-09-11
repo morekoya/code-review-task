@@ -2,11 +2,10 @@ class ArticlesController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show]
 
   def index
-    @articles = Article.all.includes(:user)
+    @articles = Article.includes(:user)
     articles_type
-    boundary = articles_boundary(0, 20)
-    offset = boundary[offset]
-    limit = boundary[limit]
+    offset = boundary_offset(0)
+    limit = boundary_limit(20)
     @articles = @articles.order(created_at: :desc).offset(offset).limit(limit)
   end
 
@@ -15,9 +14,8 @@ class ArticlesController < ApplicationController
                 .includes(:user)
                 .where(user: current_user.following_users)
 
-    boundary = articles_boundary
-    offset = boundary[offset]
-    limit = boundary[limit]
+    offset = boundary_offset(offset)
+    limit = boundary_limit(limit)
     @articles = @articles.order(created_at: :desc).offset(offset).limit(limit)
     render :index
   end
@@ -29,7 +27,7 @@ class ArticlesController < ApplicationController
     if @article.save
       render :show
     else
-      render json: { errors: @article.errors }, status: 422
+      render json: { errors: @article.errors }, status: :unprocessable_entity
     end
   end
 
@@ -84,12 +82,14 @@ class ArticlesController < ApplicationController
     @articles = @articles.favorited_by(params[:favorited])
   end
 
-  def articles_boundary(offset = nil, limit = nil)
+  def boundary_offset(_offset = nil)
     @articles_count = @articles.count
-    offset = params[:offset] if params[:offset]
-    limit = params[:limit] if params[:limit]
+    _offset = params[:offset] if params[:offset]
+  end
 
-    { offset: offset, limit: limit }
+  def boundary_limit(_limit = nil)
+    @articles_count = @articles.count
+    _limit = params[:limit] if params[:limit]
   end
 
   def not_owned
