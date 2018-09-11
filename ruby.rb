@@ -61,7 +61,9 @@ class ArticlesController < ApplicationController
   protected
 
   def article_params
-    params.require(:article).permit(:title, :body, :description, tag_list: [])
+    params.require(:article).
+      permit(:title, :body, :description, tag_list: []).
+      merge(user: current_user)
   end
 
   def articles_type
