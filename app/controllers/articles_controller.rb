@@ -2,36 +2,20 @@ class ArticlesController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show]
 
   def index
-    @artilces = ArticleQuery.new(params).results
-
+    @articles = ArticleQuery.new(params).results
     @articles_count = @articles.count
-    offset = 0
-    limit = 20
-    if params[:offset]
-      offset = params[:offset]
-    end
-    if params[:limit]
-      limit = params[:limit]
-    end
-    @articles = @articles.order(created_at: :desc).offset(offset).limit(limit)
   end
 
   def feed
-    @articles = Article.includes(:user).where(user: current_user.following_users)
+    @articles = ArticleQuery.new(params).results.
+                where(user: current_user.following_users)
 
     @articles_count = @articles.count
-    if params[:offset]
-      offset = params[:offset]
-    end
-    if params[:limit]
-      limit = params[:limit]
-    end
-    @articles = @articles.order(created_at: :desc).offset(offset).limit(limit)
     render :index
   end
 
   def create
-    @article = Article.new(articleParams)
+    @article = Article.new(article_params)
     @article.user = current_user
 
     if @article.save
@@ -49,7 +33,7 @@ class ArticlesController < ApplicationController
     @article = Article.find_by_slug!(params[:slug])
 
     if @article.user_id == @current_user_id
-      @article.update_attributes(articleParams)
+      @article.update_attributes(article_params)
       render :show
     else
       render json: { errors: { article: ['not owned by user'] } }, status: :forbidden
@@ -68,7 +52,7 @@ class ArticlesController < ApplicationController
     end
   end
 
-  def articleParams
+  def article_params
     params.require(:article).permit(:title, :body, :description, tag_list: [])
   end
 end
