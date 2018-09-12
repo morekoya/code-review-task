@@ -1,6 +1,7 @@
 class ArticlesController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show]
   before_action :find_article, only: [:show, :update, :destroy]
+  before_action :set_requester_id, only: [:update, :destroy]
 
   def index
     @articles = ArticleQuery.new(params).results
@@ -26,35 +27,39 @@ class ArticlesController < ApplicationController
     end
   end
 
-  def show
-  end
+  def show; end
 
   def update
-    if @article.user_id == @current_user_id
-      @article.update_attributes(article_params)
+    if @article.update_attributes(article_params)
       render :show
     else
-      render json: { errors: { article: ['not owned by user'] } }, status: :forbidden
+      render json: { errors: { article: @article.errors } },
+             status: :forbidden
     end
   end
 
   def destroy
-    if @article.user_id == @current_user_id
-      @article.destroy
-
+    # we can use a policy object for this type of checks
+    # Tell Don't Ask
+    if @article.destroy
+      # see if we can use head here
       render json: {}
     else
-      render json: { errors: { article: ['not owned by user'] } }, status: :unprocessable_entity
+      render json: { errors: { article: @article.errors } }, status: :unprocessable_entity
     end
   end
 
   protected
 
   def find_article
-    @article = Artilce.find_by_slug!(params[:slug])
+    @article = Article.find_by_slug!(params[:slug])
   end
 
   def article_params
     params.require(:article).permit(:title, :body, :description, tag_list: [])
+  end
+
+  def set_requester_id
+    @article.requester_id = @current_user_id
   end
 end
