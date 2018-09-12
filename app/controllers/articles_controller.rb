@@ -2,15 +2,7 @@ class ArticlesController < ApplicationController
   before_action :authenticate_user!, except: [:index, :show]
 
   def index
-    @articles = Article.all.includes(:user)
-
-    if params[:tag].present?
-      @articles = @articles.tagged_with(params[:tag])
-    elsif params[:author].present?
-      @articles = @articles.authored_by(params[:author])
-    elsif params[:favorited].present?
-      @articles = @articles.favorited_by(params[:favorited])
-    end
+    @artilces = ArticleQuery.new(params).results
 
     @articles_count = @articles.count
     offset = 0
