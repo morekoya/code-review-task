@@ -39,13 +39,11 @@ class ArticlesController < ApplicationController
   end
 
   def destroy
-    # we can use a policy object for this type of checks
-    # Tell Don't Ask
     if @article.destroy
-      # see if we can use head here
-      render json: {}
+      render head :ok
     else
-      render json: { errors: { article: @article.errors } }, status: :unprocessable_entity
+      render json: { errors: { article: @article.errors } },
+             status: :unprocessable_entity
     end
   end
 
