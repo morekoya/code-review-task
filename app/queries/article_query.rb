@@ -34,7 +34,7 @@
    end
 
    def apply_favorited_filter(relation)
-     return relation if favorited.nil? # Guard clause
+     return relation if favorited.nil?
      relation.favorited_by(favorited)
    end
 
